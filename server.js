@@ -1,18 +1,12 @@
 var express = require('express');
+var bodyParser = require('body-parser');
+var _ = require('underscore');
 var app = express();
 var PORT = process.env.PORT || 3000;
-var todo =[{
-  id: 1,
-  description:"Nothing",
-  completed : false
-},
-{
-  id: 2,
-  description:"Nothing To Do",
-  completed : false
-}];
+var todo =[];
+var todoNextId = 1;
 
-
+app.use(bodyParser.json());
 app.get('/',function (req,res) {
   res.send('This is Todo Api Working');
 })
@@ -22,17 +16,27 @@ app.get('/todos',function (req,res) {
 })
 app.get('/todo/:id',function (req,res) {
   var matchedTodo;
-  todo.forEach(function (obj) {
-    if (obj.id === parseInt(req.params.id,10)) {
-      matchedTodo = obj;
-    }
-  });
+  matchedTodo = _.findWhere(todo,{id : req.params.id});
   if (matchedTodo) {
     res.json(matchedTodo);
   } else {
     res.status(404).send();
   }
 })
+
+///POST
+app.post('/todos',function (req, res) {
+
+  var body = _.pick(req.body,'completed','description');
+  if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+    return res.status(400).send();
+  }
+  body.description = body.description.trim();
+  body.id = todoNextId++;
+  todo.push(body);
+  res.json(body);
+});
+
 app.listen(PORT,function () {
   console.log("express working on "+ PORT + "!");
 })
