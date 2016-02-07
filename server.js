@@ -138,21 +138,38 @@ app.post('/users', function (req,res) {
 
 app.post('/users/login',function (req, res) {
 	var body = _.pick(req.body,'email','password');
+	//console.log(body);
+	var userInstance;
   db.user.authenticate(body).then(function (user) {
+		// console.log(user);
 		var token = user.generateToken('authentication');
-		if (token) {
-			res.header('Auth',token).json(user.toPublicJson());
-		}
-		else {
-			res.status(401).send();
-		}
-  },function (e) {
+		//console.log(token);
+		userInstance = user;
+		return db.token.create({token: token});
+  }).then(function (tokenInstance) {
+		// console.log('tokenInstance');
+		// console.log(tokenInstance.get('token'));
+		//console.log(userInstance);
+		console.log(userInstance);
+		res.header('Auth',tokenInstance.get('token')).json(userInstance.toPublicJson());
+  }).catch( function () {
     res.status(401).send();
   })
+});
+
+//Delete users/logout
+
+app.delete('/users/logout',middleware.requireAuthentication,function (req, res) {
+	console.log('/users/logout');
+	console.log(req.token);
+	req.token.destroy().then(function () {
+		res.status(204).send();
+	}).catch(function () {
+		res.status(500).send();
+	})
 })
 
-
-db.sequelize.sync().then(function () {
+db.sequelize.sync({force : true}).then(function () {
 	app.listen(PORT, function () {
 		console.log('Express listening on port ' + PORT + '!');
 	});

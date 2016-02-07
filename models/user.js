@@ -44,6 +44,8 @@ module.exports = function (sequelize, DataTypes) {
   },
   classMethods: {
     authenticate: function (body) {
+      //console.log('authenticate');
+      //console.log(body);
       return new Promise(function(resolve, reject) {
         if(typeof body.email !== 'string' || typeof body.password !== 'string'){
           reject();
@@ -53,9 +55,11 @@ module.exports = function (sequelize, DataTypes) {
             email: body.email
           }
         }).then(function (user) {
+          //console.log(user);
           if(!user || !bcrypt.compareSync(body.password,user.get('hashed_password'))) {
             reject();
           }
+          //console.log(user);
           resolve(user);
         }, function (e) {
           reject();
@@ -70,6 +74,7 @@ module.exports = function (sequelize, DataTypes) {
           var obj = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
           user.findById(obj.id).then(function (user) {
             if (user) {
+              //console.log(user);
               resolve(user);
             } else {
               reject();
@@ -87,6 +92,7 @@ module.exports = function (sequelize, DataTypes) {
       return _.pick(json,'id','email','createdAt','updatedAt');
     },
     generateToken : function (type) {
+      // console.log(type);
       if (!_.isString(type)) {
         return undefined;
       }
@@ -97,9 +103,10 @@ module.exports = function (sequelize, DataTypes) {
         var token = jwt.sign({
           token: encryptedData,
         }, 'qwerty098');
+        // console.log(token);
         return token;
       } catch (e) {
-        console.log(e);
+        // console.log(e);
         return undefined;
       }
     }
